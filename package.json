@@ -1,0 +1,10 @@
+{
+    "author": "Joe Jones <joeknockando@googlemail.co.uk>",
+    "name": "spread-toolkit",
+    "description": "Spread Toolkit",
+    "version": "0.1.0",
+    "repository": {
+	"type": "git",
+	"url": "git://github.com/Stream-Technologies/spread-for-node.git"
+    }
+}
