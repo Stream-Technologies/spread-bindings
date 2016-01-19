@@ -1,6 +1,6 @@
 "use strict";
 var readline = require('readline');
-var spread = require('spread-toolkit');
+var spread = require('../');
 
 var rl = readline.createInterface({
     input: process.stdin,
