@@ -6,5 +6,6 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/Stream-Technologies/spread-for-node.git"
-  }
+  },
+  "license": "ISC"
 }
