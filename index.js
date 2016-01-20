@@ -96,13 +96,13 @@ Connection.prototype._connect = function() {
     // Check the private name for validity.
     var len = (this.privateName == null ? 0 : this.privateName.length);
     if(len > MAX_PRIVATE_NAME) {
-    this.privateName = this.privateName.substring(0, MAX_PRIVATE_NAME);
-    len = MAX_PRIVATE_NAME;
+        this.privateName = this.privateName.substring(0, MAX_PRIVATE_NAME);
+        len = MAX_PRIVATE_NAME;
     }
-    
+
     // Allocate the buffer.
     var buffer = new Buffer(len + 5);
-    
+
     // Set the version.
     buffer[0] = SP_MAJOR_VERSION;
     buffer[1] = SP_MINOR_VERSION;
@@ -110,41 +110,39 @@ Connection.prototype._connect = function() {
 
     // Byte used for group membership and priority.
     buffer[3] = 0; // TODO: The c verison sets this to 1, I don't know if this is needed or even important.
-    
+
     // Group membership.
     if(this.groupMembership)
     {
-    buffer[3] |= 0x01;
+        buffer[3] |= 0x01;
     }
-    
+
     // Priority.
     if(this.priority)
     {
-    buffer[3] |= 0x10;
+        buffer[3] |= 0x10;
     }
-    
+
     // Write the length.
     buffer[4] = len;
-    
     if(len > 0) {
-    buffer.write(this.privateName, 5, len, 'ascii')
+        buffer.write(this.privateName, 5, len, 'ascii');
     }
-    
+
     // Send the connection message.
     this.socket.write(buffer);
 
     this.state = STATE_CONNECT_SENT;
-    
 };
 
 Connection.prototype.readUChar = function() {
     if ( this.buffer.length - this.offset - 1 < 0 ) {
-    return null;
+        return null;
     }
     var n = this.buffer.readUInt8(this.offset);
     this.offset ++;
     return n;
-}
+};
 
 Connection.prototype.readIntAndDetectEndian = function() {
     if ( this.buffer.length - this.offset - 4 < 0 ) {
@@ -163,21 +161,21 @@ Connection.prototype.readIntAndDetectEndian = function() {
 Connection.prototype.readInt = function() {
     var values = this.readIntAndDetectEndian();
     if ( values === null ) {
-    return null;
+        return null;
     }
     if ( values[1] ) {
-    // The server is Little Endian.
-    this.readInt = Connection.prototype.readIntLE;
+        // The server is Little Endian.
+        this.readInt = Connection.prototype.readIntLE;
     } else {
-    // The server is Big Endian.
-    this.readInt = Connection.prototype.readIntBE;
+        // The server is Big Endian.
+        this.readInt = Connection.prototype.readIntBE;
     }
     return values[0];
 };
 
 Connection.prototype.readIntBE = function() {
     if ( this.buffer.length - this.offset - 4 < 0 ) {
-    return null;
+        return null;
     }
     var n = this.buffer.readInt32BE(this.offset);
     this.offset += 4;
@@ -186,16 +184,16 @@ Connection.prototype.readIntBE = function() {
 
 Connection.prototype.readIntLE = function() {
     if ( this.buffer.length - this.offset - 4 < 0 ) {
-    return null;
+        return null;
     }
     var n = this.buffer.readInt32LE(this.offset);
     this.offset += 4;
     return n;
-}
+};
 
 Connection.prototype.readString = function(n) {
     if (this.buffer.length - this.offset - n < 0 ) {
-    return null;
+        return null;
     }
     var str = this.buffer.toString('ascii', this.offset, this.offset + n);
     this.offset += n;
@@ -204,7 +202,7 @@ Connection.prototype.readString = function(n) {
 
 Connection.prototype.ignoreBytes = function(n) {
     if ( this.buffer.length - this.offset - n < 0 ) {
-    return false;
+        return false;
     }
     this.offset += n;
     return true;
@@ -212,21 +210,21 @@ Connection.prototype.ignoreBytes = function(n) {
 
 Connection.prototype.copyBytes = function(n) {
     if ( this.buffer.length - this.offset - n < 0 ) {
-    return null;
+        return null;
     }
     var bytes = this.buffer.slice(this.offset, this.offset + n);
     this.offset += n;
     return bytes;
-}
+};
 
 Connection.prototype.readAuthMethods = function() {
     // Read the length.
     var len = this.readUChar();
 
     if (len === null) {
-    return false;
+        return false;
     }
-    
+
     // Check if it was a response code
     if( len >= 128 )
     {
@@ -236,19 +234,19 @@ Connection.prototype.readAuthMethods = function() {
     // Read the name.
     // for now we ignore the list.
     return this.ignoreBytes(len)
-}
+};
 
 // Sends the choice of auth methods  message.
 Connection.prototype.sendAuthMethod = function()    {
     var len = this.authName.length;
-    
+
     // Allocate the buffer.
-     var buffer = new Buffer( MAX_AUTH_NAME * MAX_AUTH_METHODS );
+    var buffer = new Buffer( MAX_AUTH_NAME * MAX_AUTH_METHODS );
 
     buffer.write(this.authName,0, this.authName.length, 'ascii'); // Todo is this meant to be Latin 1?
-    
+
     for( ; len < ( MAX_AUTH_NAME * MAX_AUTH_METHODS ) ; len++ )
-    buffer[len] = 0;
+        buffer[len] = 0;
 
     // Send the connection message.
     this.socket.write(buffer);
@@ -259,7 +257,7 @@ Connection.prototype.checkAccept = function() {
     // Read the connection response.
     var accepted = this.readUChar();
     if ( accepted === null ) {
-    return false;
+        return false;
     }
 
     // Was it accepted?
@@ -270,7 +268,7 @@ Connection.prototype.checkAccept = function() {
     }
     return true;
 }
-    
+
 // Checks the daemon version.
 Connection.prototype.checkVersion = function() {        
     // Read the version.
@@ -278,19 +276,19 @@ Connection.prototype.checkVersion = function() {
     if ( majorVersion === null ) {
         return false;
     }
-    
+
     // Read the sub-version.
     var  minorVersion = this.readUChar();
     if ( minorVersion === null ) {
         return false;
     }
-        
+
     // Read the patch-version.
     var patchVersion = this.readUChar();
     if ( patchVersion === null ) {
         return false;
     }
-    
+
     // Check the version.
     var version = ( (majorVersion*10000) + (minorVersion*100) + patchVersion );
     if(version < 30100)
@@ -301,10 +299,10 @@ Connection.prototype.checkVersion = function() {
     {
         throw new SpreadException("Old version " + majorVersion + "." + minorVersion + "." + patchVersion + " does not support priority");
     }
-    
+
     return true;
 }
-    
+
 // Get the private group name.
 Connection.prototype.readGroup = function() {
     // Read the length.
@@ -321,9 +319,9 @@ Connection.prototype.readGroup = function() {
 
 // Actually receives a new message
 Connection.prototype. internal_receive = function() {
-    
+
     // Read the header.
-    
+
     // Get service type.
     var serviceType = this.readInt();
     if ( serviceType === null ) {
@@ -352,10 +350,10 @@ Connection.prototype. internal_receive = function() {
 
     // Get the data length.
     var dataLen = this.readInt();
-        
+
     // Validate numGroups and dataLen
 
-    if ( (numGroups < 0) || (dataLen < 0) ) 
+    if ((numGroups < 0) || (dataLen < 0))
     {
         // drop message
         // Todo, error handling I don't think we can just throw exceptions here.
@@ -364,10 +362,10 @@ Connection.prototype. internal_receive = function() {
 
     // The type.
     var type; // A short
-    
+
     // Is this a regular message?
     if ( (serviceType & Connection.REGULAR_MESS && ! serviceType & Connection.REJECT_MESS) || serviceType & Connection.REJECT_MESS) {
-                
+
         // Get the type from the hint.
         hint = clearEndian(hint);
         hint >>= 8;
@@ -393,7 +391,7 @@ Connection.prototype. internal_receive = function() {
         if ( buffer === null ) {
         return false;
     }
-    
+
     // Clear the endian type.
     serviceType = clearEndian(serviceType); // TODO don't know why we're doing this?
 
@@ -406,7 +404,7 @@ Connection.prototype. internal_receive = function() {
         group = group.substr(0, group.indexOf("\u0000"));
         groups.push(group);
     }
-    
+
     // Read in the data.
     var data = this.copyBytes(dataLen);
     if (data === null) {
@@ -429,39 +427,39 @@ Connection.prototype._data = function(data) {
             data.copy(this.buffer, oldBuffer.length);
         }
         this.offset = 0;
-        
+
         var read = 0;
-        
+
         switch (this.state) {
-            
+
         case STATE_CONNECT_SENT:
             // Recv the authentication method list
             if (! this.readAuthMethods()) {
             return;
             }
-            
+
             // Send auth method choice
             this.sendAuthMethod();
-    
+
             this.state = STATE_AUTH_METHOD_SENT;
             break;
-            
+
         case STATE_AUTH_METHOD_SENT:
             // Check for acceptance.
             if ( ! this.checkAccept() ) {
             return;
             }
-            
+
             // Check the version.
             if ( ! this.checkVersion() ) {
-            return;
+                return;
             }
-            
+
             // Get the private group name.
             if ( ! this.readGroup() ) {
-            return;
+                return;
             }
-            
+
             // Connection complete.
             this.state = STATE_CONNECTED;
             this.emit("connect");
@@ -469,10 +467,10 @@ Connection.prototype._data = function(data) {
         case STATE_CONNECTED:
             var result = this.internal_receive();
             if ( Array.isArray(result) ) {
-            result.unshift("receive");
-            this.emit.apply(this, result);
+                result.unshift("receive");
+                this.emit.apply(this, result);
             } else {
-            return;
+                return;
             }
             break;
         }
@@ -489,7 +487,7 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
         mbox.connect(address, port, privateName, priority, groupMembership);
         return mbox;
     }
-    
+
     // Check if we're connected.
     if(this.connected == true)
     {
@@ -502,33 +500,33 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
     this.privateName = privateName;
     this.priority = priority;
     this.groupMembership = groupMembership;
-    
+
     // Check if no address was specified.
     if( ! this.address)
     {
         this.address = "localhost";
     }
-    
+
     // Check if no port was specified.
     if( ! this.port)
     {
         // Use the default port.
         port = DEFAULT_SPREAD_PORT;
     }
-    
+
     // Check if the port is out of range.
     if((this.port < 0) || (this.port > (32 * 1024)))
     {
         throw new SpreadException("Bad port (" + this.port + ").");
     }
-    
+
     // Create the socket.
     this.socket = net.createConnection(this.port, this.address);
-    
+
     this.socket.setNoDelay(true);
 
     var that = this;
-    
+
     this.socket.on('connect', function() {
         that._connect();    
     });
@@ -554,7 +552,7 @@ Connection.prototype.leave = function(group) {
 };
 
 Connection.prototype.multicast = function(service_type, groups, message_type, message) {
-    
+
     // Check if we're connected.
     if(this.state != STATE_CONNECTED)
     {
@@ -564,12 +562,12 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
     if ( ! Array.isArray(groups) ) {
         groups = [ groups ];
     }
-    
+
     // Calculate the total number of bytes.
     var numBytes = 16;  // serviceType, numGroups, type/hint, dataLen
     numBytes += MAX_GROUP_NAME;  // private group
     numBytes += (MAX_GROUP_NAME * groups.length);  // groups
-    
+
     if (numBytes + message.length > MAX_MESSAGE_LENGTH )
     {
         throw new SpreadException("Message is too long for a Spread Message");
@@ -578,7 +576,7 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
     var buffer = new Buffer(numBytes);
     buffer.fill(0);
     var bufferIndex = 0;
-    
+
     // The service type.
     buffer.writeInt32BE(service_type, bufferIndex);
     bufferIndex += 4;
@@ -586,32 +584,31 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
     // The private group.
     buffer.write(this.group, bufferIndex, MAX_GROUP_NAME);
     bufferIndex += MAX_GROUP_NAME;
-    
+
     // The number of groups.
     buffer.writeInt32BE(groups.length, bufferIndex);
     bufferIndex += 4;
-    
+
     // The message type and hint.
     buffer.writeInt32BE((message_type << 8) & 0x00FFFF00, bufferIndex);
     bufferIndex += 4;
-    
+
     // The data length.
     buffer.writeInt32BE(message.length, bufferIndex);
     bufferIndex += 4;
-    
+
     // The group names.
     for(var i = 0 ; i < groups.length ; i++)
     {
         buffer.write(groups[i], bufferIndex, MAX_GROUP_NAME);
         bufferIndex += MAX_GROUP_NAME;
     }
-    
+
     // Send it.
     this.socket.write(buffer);
     if (message.length > 0) {
         this.socket.write(message);
     }
-    
 };
 
 module.exports = Connection
