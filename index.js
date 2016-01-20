@@ -233,7 +233,7 @@ Connection.prototype.readAuthMethods = function() {
 
     // Read the name.
     // for now we ignore the list.
-    return this.ignoreBytes(len)
+    return this.ignoreBytes(len);
 };
 
 // Sends the choice of auth methods  message.
