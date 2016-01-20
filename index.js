@@ -46,7 +46,7 @@ var MAX_AUTH_METHODS = 3;
 
 // Received if a connection attempt was successful.
 var ACCEPT_SESSION = 1;
-    
+
 // Used to determine endianness.
 var ENDIAN_TYPE = 0x80000080;
 
@@ -228,7 +228,7 @@ Connection.prototype.readAuthMethods = function() {
     // Check if it was a response code
     if( len >= 128 )
     {
-        throw new SpreadException("Connection attempt rejected=" + (0xffffff00 | len));
+        this.emit("error", new SpreadException("Connection attempt rejected=" + (0xffffff00 | len)));
     }
 
     // Read the name.
@@ -264,7 +264,7 @@ Connection.prototype.checkAccept = function() {
     if(accepted != ACCEPT_SESSION)
     {
     // Todo I think I need another way of passing errors back to the client.
-        throw new SpreadException("Connection attempt rejected=" + (0xffffff00 | accepted));
+        this.emit("error", new SpreadException("Connection attempt rejected=" + (0xffffff00 | accepted)));
     }
     return true;
 }
@@ -293,11 +293,11 @@ Connection.prototype.checkVersion = function() {
     var version = ( (majorVersion*10000) + (minorVersion*100) + patchVersion );
     if(version < 30100)
     {
-        throw new SpreadException("Old version " + majorVersion + "." + minorVersion + "." + patchVersion + " not supported");
+        this.emit("error", new SpreadException("Old version " + majorVersion + "." + minorVersion + "." + patchVersion + " not supported"));
     }
     if((version < 30800) && (priority))
     {
-        throw new SpreadException("Old version " + majorVersion + "." + minorVersion + "." + patchVersion + " does not support priority");
+        this.emit("error", new SpreadException("Old version " + majorVersion + "." + minorVersion + "." + patchVersion + " does not support priority"));
     }
 
     return true;
@@ -357,7 +357,7 @@ Connection.prototype. internal_receive = function() {
     {
         // drop message
         // Todo, error handling I don't think we can just throw exceptions here.
-        throw new SpreadException("Illegal Message: Message Dropped");
+        this.emit("error", new SpreadException("Illegal Message: Message Dropped"));
     }
 
     // The type.
@@ -491,7 +491,7 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
     // Check if we're connected.
     if(this.connected == true)
     {
-        throw new SpreadException("Already connected.");
+        this.emit("error", new SpreadException("Already connected."));
     }
 
     // Store member variables.
@@ -517,7 +517,7 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
     // Check if the port is out of range.
     if((this.port < 0) || (this.port > (32 * 1024)))
     {
-        throw new SpreadException("Bad port (" + this.port + ").");
+        this.emit("error", new SpreadException("Bad port (" + this.port + ")."));
     }
 
     // Create the socket.
@@ -528,7 +528,7 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
     var that = this;
 
     this.socket.on('connect', function() {
-        that._connect();    
+        that._connect();
     });
 
     this.socket.on('data', function(data) {
@@ -556,7 +556,7 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
     // Check if we're connected.
     if(this.state != STATE_CONNECTED)
     {
-        throw new SpreadException("Not connected.");
+        this.emit("error", new SpreadException("Not connected."));
     }
 
     if ( ! Array.isArray(groups) ) {
@@ -570,7 +570,7 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
 
     if (numBytes + message.length > MAX_MESSAGE_LENGTH )
     {
-        throw new SpreadException("Message is too long for a Spread Message");
+        this.emit("error", new SpreadException("Message is too long for a Spread Message"));
     }
     // Allocate the send buffer.
     var buffer = new Buffer(numBytes);
