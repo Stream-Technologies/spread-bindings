@@ -27,4 +27,8 @@ mbox.on("connect", function(){
 mbox.on("receive", function(serviceType, sender, groups, type, endianMismatch, data){
 	//Do things with the recieved messages
 })
+
+mbox.on("error", function(error){
+	console.log("[ERROR]", error.message);
+})
 ```
