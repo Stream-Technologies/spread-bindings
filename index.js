@@ -476,6 +476,11 @@ Connection.prototype._data = function(data) {
         }
 
         this.buffer = this.buffer.slice(this.offset);
+        
+        // Check if buffer still has conent and if so, continue digesting
+        if (this.buffer.length > 0) {
+            this._data( new Buffer(0));
+        }
     } catch (e) {
         this.emit("error", e);
     }
