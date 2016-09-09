@@ -576,6 +576,12 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
     numBytes += MAX_GROUP_NAME;  // private group
     numBytes += (MAX_GROUP_NAME * groups.length);  // groups
 
+    if (typeof message === 'string') {
+        message = new Buffer(message);
+    } else if (!Buffer.isBuffer(message)) {
+        return this.emit("error", new SpreadException("Message is neither a string nor a buffer"));
+    }
+
     if (numBytes + message.length > MAX_MESSAGE_LENGTH )
     {
         return this.emit("error", new SpreadException("Message is too long for a Spread Message"));
