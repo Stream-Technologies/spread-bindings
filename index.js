@@ -540,6 +540,9 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
         that._data(data);
     });
 
+    this.socket.on('error', function (error) {
+        that.emit('error', error);
+    })
 };
 
 Connection.connect = Connection.prototype.connect;
