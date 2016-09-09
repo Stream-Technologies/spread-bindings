@@ -564,7 +564,7 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
     // Check if we're connected.
     if(this.state != STATE_CONNECTED)
     {
-        this.emit("error", new SpreadException("Not connected."));
+        return this.emit("error", new SpreadException("Not connected."));
     }
 
     if ( ! Array.isArray(groups) ) {
@@ -578,7 +578,7 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
 
     if (numBytes + message.length > MAX_MESSAGE_LENGTH )
     {
-        this.emit("error", new SpreadException("Message is too long for a Spread Message"));
+        return this.emit("error", new SpreadException("Message is too long for a Spread Message"));
     }
     // Allocate the send buffer.
     var buffer = new Buffer(numBytes);
