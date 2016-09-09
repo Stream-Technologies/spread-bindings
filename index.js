@@ -364,7 +364,7 @@ Connection.prototype. internal_receive = function() {
     var type; // A short
 
     // Is this a regular message?
-    if ( (serviceType & Connection.REGULAR_MESS && ! serviceType & Connection.REJECT_MESS) || serviceType & Connection.REJECT_MESS) {
+    if ( (serviceType & Connection.REGULAR_MESS && !(serviceType & Connection.REJECT_MESS)) || serviceType & Connection.REJECT_MESS) {
 
         // Get the type from the hint.
         hint = clearEndian(hint);
