@@ -542,7 +542,12 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
 
     this.socket.on('error', function (error) {
         that.emit('error', error);
-    })
+    });
+
+    this.socket.on('close', function () {
+        that.state = undefined;
+        that.emit('close', new Error('Close'));
+    });
 };
 
 Connection.connect = Connection.prototype.connect;
