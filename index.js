@@ -544,9 +544,9 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
         that.emit('error', error);
     });
 
-    this.socket.on('close', function () {
+    this.socket.on('close', function (had_error) {
         that.state = undefined;
-        that.emit('close', new Error('Close'));
+        that.emit('close', had_error);
     });
 };
 
