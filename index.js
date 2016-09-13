@@ -197,7 +197,7 @@ Connection.prototype.readString = function(n) {
     }
     var str = this.buffer.toString('ascii', this.offset, this.offset + n);
     this.offset += n;
-    return str;
+    return str.replace(/\0/g, '');
 };
 
 Connection.prototype.ignoreBytes = function(n) {
