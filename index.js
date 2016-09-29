@@ -197,7 +197,7 @@ Connection.prototype.readString = function(n) {
     }
     var str = this.buffer.toString('ascii', this.offset, this.offset + n);
     this.offset += n;
-    return str;
+    return str.replace(/\0/g, '');
 };
 
 Connection.prototype.ignoreBytes = function(n) {
@@ -364,7 +364,7 @@ Connection.prototype. internal_receive = function() {
     var type; // A short
 
     // Is this a regular message?
-    if ( (serviceType & Connection.REGULAR_MESS && ! serviceType & Connection.REJECT_MESS) || serviceType & Connection.REJECT_MESS) {
+    if ( (serviceType & Connection.REGULAR_MESS && !(serviceType & Connection.REJECT_MESS)) || serviceType & Connection.REJECT_MESS) {
 
         // Get the type from the hint.
         hint = clearEndian(hint);
@@ -476,6 +476,11 @@ Connection.prototype._data = function(data) {
         }
 
         this.buffer = this.buffer.slice(this.offset);
+        
+        // Check if buffer still has conent and if so, continue digesting
+        if (this.buffer.length > 0) {
+            this._data( new Buffer(0));
+        }
     } catch (e) {
         this.emit("error", e);
     }
@@ -535,6 +540,14 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
         that._data(data);
     });
 
+    this.socket.on('error', function (error) {
+        that.emit('error', error);
+    });
+
+    this.socket.on('close', function (had_error) {
+        that.state = undefined;
+        that.emit('close', had_error);
+    });
 };
 
 Connection.connect = Connection.prototype.connect;
@@ -556,7 +569,7 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
     // Check if we're connected.
     if(this.state != STATE_CONNECTED)
     {
-        this.emit("error", new SpreadException("Not connected."));
+        return this.emit("error", new SpreadException("Not connected."));
     }
 
     if ( ! Array.isArray(groups) ) {
@@ -568,9 +581,15 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
     numBytes += MAX_GROUP_NAME;  // private group
     numBytes += (MAX_GROUP_NAME * groups.length);  // groups
 
+    if (typeof message === 'string') {
+        message = new Buffer(message);
+    } else if (!Buffer.isBuffer(message)) {
+        return this.emit("error", new SpreadException("Message is neither a string nor a buffer"));
+    }
+
     if (numBytes + message.length > MAX_MESSAGE_LENGTH )
     {
-        this.emit("error", new SpreadException("Message is too long for a Spread Message"));
+        return this.emit("error", new SpreadException("Message is too long for a Spread Message"));
     }
     // Allocate the send buffer.
     var buffer = new Buffer(numBytes);
