@@ -17,16 +17,16 @@ var clearEndian = function(i) {
 
 // The default Spread port.
 var DEFAULT_SPREAD_PORT = 4803;
-    
+
 // The maximum length of the private name.
 var MAX_PRIVATE_NAME = 10;
-    
+
 // The maximum length of a message + group names.
-var MAX_MESSAGE_LENGTH = 140000;
+var DEFAULT_MAX_MESSAGE_LENGTH = 140000;
 
 // The maximum length of the group name.
 var MAX_GROUP_NAME = 32;
-    
+
 // The Spread version.
 var SP_MAJOR_VERSION = 4;
 var SP_MINOR_VERSION = 4;
@@ -61,6 +61,7 @@ var STATE_CONNECTED = 3;
 var Connection = function() {
     this.buffer = new Buffer(0);
     this.authName = DEFAULT_AUTH_NAME;
+    this.maxMessageLength = DEFAULT_MAX_MESSAGE_LENGTH;
     EventEmitter.call(this);
 };
 
@@ -270,7 +271,7 @@ Connection.prototype.checkAccept = function() {
 }
 
 // Checks the daemon version.
-Connection.prototype.checkVersion = function() {        
+Connection.prototype.checkVersion = function() {
     // Read the version.
     var majorVersion = this.readUChar();
     if ( majorVersion === null ) {
@@ -476,7 +477,7 @@ Connection.prototype._data = function(data) {
         }
 
         this.buffer = this.buffer.slice(this.offset);
-        
+
         // Check if buffer still has conent and if so, continue digesting
         if (this.buffer.length > 0) {
             this._data( new Buffer(0));
@@ -587,7 +588,7 @@ Connection.prototype.multicast = function(service_type, groups, message_type, me
         return this.emit("error", new SpreadException("Message is neither a string nor a buffer"));
     }
 
-    if (numBytes + message.length > MAX_MESSAGE_LENGTH )
+    if (numBytes + message.length > this.maxMessageLength)
     {
         return this.emit("error", new SpreadException("Message is too long for a Spread Message"));
     }
