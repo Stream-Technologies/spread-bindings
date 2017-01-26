@@ -230,6 +230,7 @@ Connection.prototype.readAuthMethods = function() {
     if( len >= 128 )
     {
         this.emit("error", new SpreadException("Connection attempt rejected=" + (0xffffff00 | len)));
+        this.disconnect();
     }
 
     // Read the name.
@@ -266,6 +267,7 @@ Connection.prototype.checkAccept = function() {
     {
     // Todo I think I need another way of passing errors back to the client.
         this.emit("error", new SpreadException("Connection attempt rejected=" + (0xffffff00 | accepted)));
+        this.disconnect();
     }
     return true;
 }
@@ -295,6 +297,7 @@ Connection.prototype.checkVersion = function() {
     if(version < 30100)
     {
         this.emit("error", new SpreadException("Old version " + majorVersion + "." + minorVersion + "." + patchVersion + " not supported"));
+        this.disconnect();
     }
     if((version < 30800) && (priority))
     {
@@ -547,6 +550,7 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
 
     this.socket.on('close', function (had_error) {
         that.state = undefined;
+        that.buffer = new Buffer(0);
         that.emit('close', had_error);
     });
 };
@@ -554,7 +558,8 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
 Connection.connect = Connection.prototype.connect;
 
 Connection.prototype.disconnect = function() {
-
+    // TODO Send Proper Disconnect message
+    this.socket.end();
 };
 
 Connection.prototype.join = function(group) {
