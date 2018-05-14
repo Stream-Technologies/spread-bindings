@@ -497,10 +497,11 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
         return mbox;
     }
 
-    // Check if we're connected.
-    if(this.connected == true)
+    // Check if we have an ongoing connection (attempt)
+    if (this.socket)
     {
         this.emit("error", new SpreadException("Already connected."));
+        return;
     }
 
     // Store member variables.
@@ -527,6 +528,7 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
     if((this.port < 0) || (this.port > (32 * 1024)))
     {
         this.emit("error", new SpreadException("Bad port (" + this.port + ")."));
+        return;
     }
 
     // Create the socket.
@@ -551,14 +553,19 @@ Connection.prototype.connect = function(address, port, privateName, priority, gr
     this.socket.on('close', function (had_error) {
         that.state = undefined;
         that.buffer = new Buffer(0);
+        that.socket = undefined;
+        that.group = undefined;
         that.emit('close', had_error);
     });
 };
 
 Connection.connect = Connection.prototype.connect;
 
-Connection.prototype.disconnect = function() {
-    // TODO Send Proper Disconnect message
+Connection.prototype.disconnect = function () {
+    // Send disconnect message if we have a group name
+    if (this.group) {
+        this.multicast(Connection.KILL_MESS, [], 0, '');
+    }
     this.socket.end();
 };
 
